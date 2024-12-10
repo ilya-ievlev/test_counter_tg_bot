@@ -14,5 +14,5 @@ public class BotConfig {
     private String botName;
 
     @Value("${bot.token}")
-    private String token;// TODO: 13.11.2024 move this away ASAP before github
+    private String token;
 }

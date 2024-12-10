@@ -22,6 +22,8 @@ create table if not exists test_results
     user_uploaded_by_id bigint       not null,
     message_id          bigint       not null,
     message_text        varchar(500) not null,
+    image_url           varchar(500),
+    file_id             bigint,
     foreign key (test_id) references tests (id),
     foreign key (user_executor_id) references users (id),
     foreign key (user_uploaded_by_id) references users (id)
@@ -36,10 +38,12 @@ create table if not exists weekly_reports
 
 create table if not exists weekly_report_results
 (
-    id                  bigint not null primary key auto_increment unique,
-    weekly_report_id    bigint not null,
-    user_executor_id    bigint not null,
-    user_uploaded_by_id bigint not null,
+    id                  bigint       not null primary key auto_increment unique,
+    weekly_report_id    bigint       not null,
+    user_executor_id    bigint       not null,
+    user_uploaded_by_id bigint       not null,
+    image_url           varchar(500),
+    file_id             bigint,
     foreign key (weekly_report_id) references weekly_reports (id),
     foreign key (user_executor_id) references users (id),
     foreign key (user_uploaded_by_id) references users (id)

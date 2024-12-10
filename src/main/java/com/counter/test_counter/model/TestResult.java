@@ -53,5 +53,9 @@ public class TestResult {
     @NotNull
     private String messageText;
 
+    @Column(name = "image_url")
+    private String imageUrl;
 
+    @Column(name = "file_id")
+    private Long fileId; // todo check what happens if message was deleted or edited
 }

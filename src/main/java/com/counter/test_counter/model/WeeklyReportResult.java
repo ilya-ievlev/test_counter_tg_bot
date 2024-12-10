@@ -36,4 +36,10 @@ public class WeeklyReportResult {
     @NotNull
     @JoinColumn(name = "user_uploaded_by_id")
     private User uploadedBy;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "file_id")
+    private String fileId; // todo some fields can be null in order to  be able to save results without photos
 }

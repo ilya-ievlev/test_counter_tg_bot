@@ -1,6 +1,7 @@
 package com.counter.test_counter.processor;
 
 import com.counter.test_counter.config.BotConfig;
+import com.counter.test_counter.exception.WrongUserInputException;
 import com.counter.test_counter.service.TelegramBotService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,10 +11,7 @@ import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Document;
-import org.telegram.telegrambots.meta.api.objects.File;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -47,6 +45,11 @@ public class TelegramBotProcessor extends TelegramLongPollingBot { // TODO: 14.1
     }
 
     @Override
+    public void onUpdatesReceived(List<Update> updates) {
+        super.onUpdatesReceived(updates);
+    }
+
+    @Override
     public String getBotUsername() {
         return botConfig.getBotName();
     }
@@ -60,12 +63,28 @@ public class TelegramBotProcessor extends TelegramLongPollingBot { // TODO: 14.1
     @Override
     public void onUpdateReceived(Update update) {
         if (update.getMessage().getChat().getId() == WORK_CHAT_ID) { // TODO: 18.11.2024 what if there is no message in update?
-            telegramBotService.processGroupMessage(update);
+            processGroupMessage(update);
         } else if (update.getMessage().getChat().getId() > 0) {
-            telegramBotService.processPrivateMessage(update);
+//            processPrivateMessage(update);
         } else {
             sendMessage(update.getMessage().getChatId(), "can't process this chat");
         }
+    }
+
+    private void processGroupMessage(Update update) {
+        if (update.getMessage().hasText() && update.getMessage().getText() != null) {
+            String messageText = update.getMessage().getText();
+            if (messageText.equals("/menu")) { // todo messageText is null somehow, if we insert text with image. then this text will be called caption, not text
+                sendMessage(update.getMessage().getChatId(), "I can't do anything here. Please, proceed to private messages or google sheets to change some information");
+            }
+        }
+        if ((update.getMessage().hasDocument() && update.getMessage().getCaption().contains("#тест")) || // todo what if there is no caption
+                (update.getMessage().hasPhoto() && update.getMessage().getCaption().contains("#тест"))) {
+            sendMessage(update.getMessage().getChatId(), "#тест найден, обрабатываю");
+            processTestHashtag(update.getMessage());
+
+        }
+
     }
 
 //    public void onUpdateReceived(Update update) {
@@ -96,18 +115,51 @@ public class TelegramBotProcessor extends TelegramLongPollingBot { // TODO: 14.1
         }
     }
 
-    public void saveDocumentLocally(Message message) {
-        Document document = message.getDocument();
-        if (document != null && document.getFileName().endsWith(".jpg")) { // TODO: 18.11.2024 add another extensions
-            try {
-                String fileId = document.getFileId();
-                GetFile getFile = new GetFile();
-                getFile.setFileId(fileId);
-                File file = execute(getFile);  // This is the method to get the file from Telegram servers
-                downloadFile(file, "downloads/");
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
+    public void processTestHashtag(Message message) {
+        if (message == null) {
+            return;
+        }
+        if (message.getMediaGroupId() != null) {
+            sendMessage(WORK_CHAT_ID, "я тебе несколько картинок пачкой обрабатывать не буду, давай по одной, плз");
+            return;
+        }
+        if (message.hasDocument()) {
+            Document document = message.getDocument();
+            switch (document.getMimeType()) {
+                case "image/jpeg":
+                case "": // todo add more extensions
+                    saveFileLocally(message);
+                    break;
+                default:
+                    sendMessage(WORK_CHAT_ID, "ты мне скинул какую то дичь, я не могу работать с " + document.getMimeType());
             }
+        }
+        if (message.hasPhoto()) {
+            saveFileLocally(message);
+        }
+
+
+    }
+
+    public void saveFileLocally(Message message) {
+        String fileId = null;
+        if (message.hasDocument()) {
+            fileId = message.getDocument().getFileId();
+        }
+        if (message.hasPhoto()) {
+            List<PhotoSize> photoSizes = message.getPhoto();
+            fileId = photoSizes.get(photoSizes.size() - 1).getFileId();
+        }
+        if (fileId == null) {
+            throw new WrongUserInputException("no file found in message"); // todo check if this is correct to throw exception here or just log it
+        }
+        try {
+            GetFile getFile = new GetFile();
+            getFile.setFileId(fileId);
+            File file = execute(getFile);  // This is the method to get the file from Telegram servers
+            downloadFile(file, "downloads/");
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 
@@ -155,3 +207,4 @@ public class TelegramBotProcessor extends TelegramLongPollingBot { // TODO: 14.1
         }
     }
 }
+

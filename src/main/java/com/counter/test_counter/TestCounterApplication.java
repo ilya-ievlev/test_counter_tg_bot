@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class TestCounterApplication {
     public static void main(String[] args) {
-        ManualEnvLoader.loadEnvVariables("D:\\files_for_bot\\file.env");
+        ManualEnvLoader.loadEnvVariables("C:\\java projects\\tg_bot\\files_for_bot\\file.env");
         SpringApplication.run(TestCounterApplication.class, args);
     }
 
