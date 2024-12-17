@@ -39,13 +39,19 @@ public class User {
     @NotNull
     private String lastName;
 
+    @Column(name = "local_name")
+    private String localName;
+
+    @OneToMany(mappedBy = "user")
+    private List<NameSubstitute> nameSubstitutes;
+
+
+
 
     @Column(name = "username")
     @NotBlank
-    @NotNull
-    @Unique
     @Size() // TODO: 07.11.2024 use real tg constraints here
-    private String username;
+    private String username; // todo what if user has no username publicly available?
 
     @Column(name = "is_bot_admin")
     private boolean isBotAdmin;
@@ -59,9 +65,7 @@ public class User {
     private List<Test> testList;
 
     public User(
-//            Long chatId,
             String firstName, String lastName, String username) {
-//        this.chatId = chatId; // TODO: 07.11.2024 check if we need chatId in group settings, or do we need something else here
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
@@ -79,4 +83,6 @@ public class User {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+
 }

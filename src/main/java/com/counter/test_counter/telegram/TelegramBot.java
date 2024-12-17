@@ -1,8 +1,9 @@
-package com.counter.test_counter.processor;
+package com.counter.test_counter.telegram;
 
-import com.counter.test_counter.config.BotConfig;
+import com.counter.test_counter.telegram.config.BotConfig;
+import com.counter.test_counter.dispatcher.UpdateDispatcher;
 import com.counter.test_counter.exception.WrongUserInputException;
-import com.counter.test_counter.service.TelegramBotService;
+import com.counter.test_counter.model.TestResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,11 +28,11 @@ import java.util.List;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class TelegramBotProcessor extends TelegramLongPollingBot { // TODO: 14.11.2024 change name
+public class TelegramBot extends TelegramLongPollingBot { // TODO: 14.11.2024 change name
 
     private static final long WORK_CHAT_ID = -4511047196l; // TODO: 13.11.2024 probably move this to env variables or other class, to be able to change it quicker
     private final BotConfig botConfig;
-    private final TelegramBotService telegramBotService;
+    private final UpdateDispatcher updateDispatcher;
 
     @PostConstruct
     private void initCommands() {
@@ -44,10 +45,6 @@ public class TelegramBotProcessor extends TelegramLongPollingBot { // TODO: 14.1
         }
     }
 
-    @Override
-    public void onUpdatesReceived(List<Update> updates) {
-        super.onUpdatesReceived(updates);
-    }
 
     @Override
     public String getBotUsername() {
@@ -62,16 +59,11 @@ public class TelegramBotProcessor extends TelegramLongPollingBot { // TODO: 14.1
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.getMessage().getChat().getId() == WORK_CHAT_ID) { // TODO: 18.11.2024 what if there is no message in update?
-            processGroupMessage(update);
-        } else if (update.getMessage().getChat().getId() > 0) {
-//            processPrivateMessage(update);
-        } else {
-            sendMessage(update.getMessage().getChatId(), "can't process this chat");
-        }
+        updateDispatcher.distribute(update, this);
     }
 
     private void processGroupMessage(Update update) {
+
         if (update.getMessage().hasText() && update.getMessage().getText() != null) {
             String messageText = update.getMessage().getText();
             if (messageText.equals("/menu")) { // todo messageText is null somehow, if we insert text with image. then this text will be called caption, not text
@@ -81,9 +73,19 @@ public class TelegramBotProcessor extends TelegramLongPollingBot { // TODO: 14.1
         if ((update.getMessage().hasDocument() && update.getMessage().getCaption().contains("#тест")) || // todo what if there is no caption
                 (update.getMessage().hasPhoto() && update.getMessage().getCaption().contains("#тест"))) {
             sendMessage(update.getMessage().getChatId(), "#тест найден, обрабатываю");
-            processTestHashtag(update.getMessage());
+            processImageWithHashtag(update.getMessage());
+//            processTestHashtag(update.getMessage());
 
         }
+
+    }
+
+    private void processImageWithHashtag(Message message) {
+        TestResult testResult = new TestResult();
+        testResult.setMessageId(message.getMessageId());
+        testResult.setMessageText(message.getCaption());
+//        testResult.setUploadedBy(message.getFrom());
+        testResult.setDateOfResult(new java.util.Date());
 
     }
 
@@ -115,7 +117,7 @@ public class TelegramBotProcessor extends TelegramLongPollingBot { // TODO: 14.1
         }
     }
 
-    public void processTestHashtag(Message message) {
+    public void downloadFile(Message message) {
         if (message == null) {
             return;
         }
@@ -206,5 +208,7 @@ public class TelegramBotProcessor extends TelegramLongPollingBot { // TODO: 14.1
             log.error(e.getMessage(), e);
         }
     }
+
+
 }
 
