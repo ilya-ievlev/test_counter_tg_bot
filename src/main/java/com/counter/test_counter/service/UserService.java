@@ -5,6 +5,8 @@ import com.counter.test_counter.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -23,4 +25,11 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public Optional<User> findByUsername(String userName) {
+        return userRepository.findByUsername(userName);
+    }
+
+    public Optional<User> findById(long id) {
+        return userRepository.findById(id);
+    }
 }
