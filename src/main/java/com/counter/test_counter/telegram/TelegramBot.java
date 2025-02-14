@@ -1,6 +1,7 @@
 package com.counter.test_counter.telegram;
 
 import com.counter.test_counter.dispatcher.TelegramUpdateDispatcher;
+import com.counter.test_counter.exception.TelegramBotException;
 import com.counter.test_counter.exception.WrongUserInputException;
 import com.counter.test_counter.model.TestResult;
 import com.counter.test_counter.telegram.config.BotConfig;
@@ -60,6 +61,7 @@ public class TelegramBot extends TelegramLongPollingBot { // TODO: 14.11.2024 ch
 
     @Override
     public void onUpdateReceived(Update update) {
+//        throw new IllegalArgumentException("this is a test exception");
         telegramUpdateDispatcher.distribute(update, this);
     }
 
@@ -98,7 +100,7 @@ public class TelegramBot extends TelegramLongPollingBot { // TODO: 14.11.2024 ch
         }
     }
 
-    public Optional<java.io.File> downloadImage(Message message) {
+    public java.io.File downloadImage(Message message) {
         if (message == null) {
             log.error("message is null");
             throw new IllegalArgumentException("message must not be null");
@@ -113,16 +115,16 @@ public class TelegramBot extends TelegramLongPollingBot { // TODO: 14.11.2024 ch
             switch (document.getMimeType()) {
                 case "image/jpeg":
                 case "": // todo add more extensions
-                    return Optional.of(saveFileLocally(message));
+                    return saveFileLocally(message);
                 default:
                     sendMessage(WORK_CHAT_ID, "ты мне скинул какую то дичь, я не могу работать с " + document.getMimeType());
             }
+        } else if (message.hasPhoto()) {
+            return saveFileLocally(message);
+        } else {
+            throw new TelegramBotException("no image found in message");
         }
-        if (message.hasPhoto()) {
-            return Optional.of(saveFileLocally(message));
-        }
-
-        return Optional.empty();
+        return null; // todo check for unreachable statement
     }
 
 
@@ -205,7 +207,7 @@ public class TelegramBot extends TelegramLongPollingBot { // TODO: 14.11.2024 ch
                 if (!dir.exists()) {
                     dir.mkdirs();
                 }
-                if(targetFile.exists()){
+                if (targetFile.exists()) {
                     in.close();
                     // todo remove, this is temporary solution
                     sendMessage(WORK_CHAT_ID, "файл уже существует, не буду его перезаписывать");

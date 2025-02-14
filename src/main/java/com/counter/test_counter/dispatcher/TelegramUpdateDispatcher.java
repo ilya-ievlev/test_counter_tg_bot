@@ -25,31 +25,32 @@ public class TelegramUpdateDispatcher {
     private final PrivateCommandHandler privateCommandHandler;
 
     public void distribute(Update update, TelegramBot telegramBot) {
-        if (update == null || telegramBot == null) {
-            throw new IllegalArgumentException("Update and TelegramBot must not be null");
-        }
-        if (update.hasCallbackQuery()) {
-            if (update.getCallbackQuery().getMessage().getChatId() == WORK_CHAT_ID) {
-                groupCallbackQueryHandler.handle(update, telegramBot);
-            } else if (update.getCallbackQuery().getMessage().getChatId() > 0) {
-                privateCallbackQueryHandler.handle(update, telegramBot);
-            }
-        }
-        if (update.hasMessage() || update.getMessage().getChatId() == WORK_CHAT_ID) {
-            if (update.getMessage().getText() != null && update.getMessage().getText().charAt(0) == '/') { // todo check if this thing can throw nullpointer here
-                groupCommandHandler.handle(update, telegramBot);
-            } else {
-                groupMessageHandler.handle(update, telegramBot);
-            }
-        } else if (update.hasMessage() || update.getMessage().getChatId() > 0) {
-            if (update.getMessage().getText() != null && update.getMessage().getText().charAt(0) == '/') { // todo check if this thing can throw nullpointer here
-                privateCommandHandler.handle(update, telegramBot);
-            } else {
-                privateMessageHandler.handle(update, telegramBot);
-            }
-        } else {
-            telegramBot.sendMessage(update.getMessage().getChatId(), "я не могу обработать сообщения такого типа, пожалуйста, обратитесь к администратору");
-            log.info("unknown update type: {}", update);
-        }
+        throw new IllegalArgumentException("this is a test exception");
+//        if (update == null || telegramBot == null) {
+//            throw new IllegalArgumentException("Update and TelegramBot must not be null");
+//        }
+//        if (update.hasCallbackQuery()) {
+//            if (update.getCallbackQuery().getMessage().getChatId() == WORK_CHAT_ID) {
+//                groupCallbackQueryHandler.handle(update, telegramBot);
+//            } else if (update.getCallbackQuery().getMessage().getChatId() > 0) {
+//                privateCallbackQueryHandler.handle(update, telegramBot);
+//            }
+//        }
+//        if (update.hasMessage() || update.getMessage().getChatId() == WORK_CHAT_ID) {
+//            if (update.getMessage().getText() != null && update.getMessage().getText().charAt(0) == '/') { // todo check if this thing can throw nullpointer here
+//                groupCommandHandler.handle(update, telegramBot);
+//            } else {
+//                groupMessageHandler.handle(update, telegramBot);
+//            }
+//        } else if (update.hasMessage() || update.getMessage().getChatId() > 0) {
+//            if (update.getMessage().getText() != null && update.getMessage().getText().charAt(0) == '/') { // todo check if this thing can throw nullpointer here
+//                privateCommandHandler.handle(update, telegramBot);
+//            } else {
+//                privateMessageHandler.handle(update, telegramBot);
+//            }
+//        } else {
+//            telegramBot.sendMessage(update.getMessage().getChatId(), "я не могу обработать сообщения такого типа, пожалуйста, обратитесь к администратору");
+//            log.info("unknown update type: {}", update);
+//        }
     }
 }

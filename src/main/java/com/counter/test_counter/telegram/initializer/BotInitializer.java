@@ -23,8 +23,8 @@ public class BotInitializer {
         try {
             telegramBotsApi.registerBot(bot);
         } catch (TelegramApiException e) {
-            // TODO: 05.11.2024 should I throw runtimeException here?
-            log.error("something wrong with telegram api"+e.getMessage(), e);
+            log.error("something wrong with telegram api" + e.getMessage(), e);
+            throw new TelegramApiException("telegram exception occurred" + e.getMessage(), e);
         }
     }
 }

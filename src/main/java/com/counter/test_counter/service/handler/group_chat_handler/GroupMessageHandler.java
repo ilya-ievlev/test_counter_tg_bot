@@ -40,15 +40,10 @@ public class GroupMessageHandler implements Handler {
 //            processImageWithHashtag(update.getMessage());
 //
 //            processTestHashtag(update.getMessage());
-            Optional<File> downloadedFileOptional = telegramBot.downloadImage(update.getMessage());
-            if (downloadedFileOptional.isEmpty()) {
-                telegramBot.sendMessage(update.getMessage().getChatId(), "Не удалось загрузить файл из сообщения, обратитесь к администратору");
-                return;
-            }
-            File downloadedFile = downloadedFileOptional.get();
-            Optional<String> result = ocrClient.getResult(downloadedFile); // todo change this logic
-            System.out.println(result.toString());
-            processImageWithHashtag(update.getMessage(), downloadedFile, result.get(), telegramBot); // todo change this
+            File downloadedFile = telegramBot.downloadImage(update.getMessage());
+            String result = ocrClient.getResult(downloadedFile); // todo change this logic
+            System.out.println(result);
+            processImageWithHashtag(update.getMessage(), downloadedFile, result, telegramBot); // todo change this
         }
     }
 
@@ -89,7 +84,7 @@ public class GroupMessageHandler implements Handler {
                 }
             }
 
-        } else { // todo set executor to user who uploaded the test
+        } else {
             Optional<User> userOptional = userService.findById(message.getFrom().getId());
             if (userOptional.isEmpty()) {
                 telegramBot.sendMessage(message.getChatId(), "Пользователь не найден, не является частью групы или не зарегестрирован в боте для подсчета тестов, обратитесь к администратору");
@@ -117,29 +112,29 @@ public class GroupMessageHandler implements Handler {
 
 
     }
-
-    private Optional<User> getExecutorIfExists(Message message) {
-        List<MessageEntity> entities;
-        if (!message.getEntities().isEmpty()) {
-            entities = message.getEntities();
-        } else if (!message.getCaptionEntities().isEmpty()) {
-            entities = message.getCaptionEntities();
-        } else {
-            return Optional.empty();
-        }
-
-
-        for (MessageEntity entity : entities) {
-            if (entity.getType().equals("mention")) {
-                String userName = entity.getText();
-                Optional<User> userExecutorOptional = userService.findByUsername(userName);// todo use entityGraph here to avoid pulling hole user
-                if (userExecutorOptional.isEmpty()) {
-                    return Optional.empty();
-                }
-            }
-
-        }
-
-        return Optional.empty();
-    }
+//
+//    private Optional<User> getExecutorIfExists(Message message) {
+//        List<MessageEntity> entities;
+//        if (!message.getEntities().isEmpty()) {
+//            entities = message.getEntities();
+//        } else if (!message.getCaptionEntities().isEmpty()) {
+//            entities = message.getCaptionEntities();
+//        } else {
+//            return Optional.empty();
+//        }
+//
+//
+//        for (MessageEntity entity : entities) {
+//            if (entity.getType().equals("mention")) {
+//                String userName = entity.getText();
+//                Optional<User> userExecutorOptional = userService.findByUsername(userName);// todo use entityGraph here to avoid pulling hole user
+//                if (userExecutorOptional.isEmpty()) {
+//                    return Optional.empty();
+//                }
+//            }
+//
+//        }
+//
+//        return Optional.empty();
+//    }
 }

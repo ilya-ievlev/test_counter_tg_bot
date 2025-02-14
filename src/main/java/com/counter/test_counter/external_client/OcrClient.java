@@ -1,5 +1,6 @@
 package com.counter.test_counter.external_client;
 
+import com.counter.test_counter.exception.OCRPhotoException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j;
 import lombok.extern.slf4j.Slf4j;
@@ -16,16 +17,15 @@ import java.util.Optional;
 @Slf4j
 public class OcrClient {
 
-    public Optional<String> getResult(File imageFile) {
+    public String getResult(File imageFile) {
         ITesseract tesseract = new Tesseract();
         tesseract.setDatapath("/home/ilya/Desktop/java projects active/tg_bot/files_for_bot/");
         tesseract.setLanguage("ukr");
         try {
-            String result = tesseract.doOCR(imageFile);
-            return Optional.of(result);
+            return tesseract.doOCR(imageFile);
         } catch (TesseractException e) {
             log.error(e.getMessage(), e);
+            throw new OCRPhotoException(e.getMessage(), e);
         }
-        return Optional.empty();
     }
 }
