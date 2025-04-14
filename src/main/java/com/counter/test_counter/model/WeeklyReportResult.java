@@ -42,4 +42,10 @@ public class WeeklyReportResult {
 
     @Column(name = "file_id")
     private String fileId; // todo some fields can be null in order to  be able to save results without photos
+
+    @Column(name = "ocr_result")
+    private String ocrResult;
+
+    @Column(name = "chat_id")
+    private String chatId;
 }

@@ -1,9 +1,9 @@
 package com.counter.test_counter.telegram;
 
-import com.counter.test_counter.telegram.config.BotConfig;
-import com.counter.test_counter.dispatcher.UpdateDispatcher;
+import com.counter.test_counter.dispatcher.TelegramUpdateDispatcher;
 import com.counter.test_counter.exception.WrongUserInputException;
 import com.counter.test_counter.model.TestResult;
+import com.counter.test_counter.telegram.config.BotConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,6 +24,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -32,7 +33,7 @@ public class TelegramBot extends TelegramLongPollingBot { // TODO: 14.11.2024 ch
 
     private static final long WORK_CHAT_ID = -4511047196l; // TODO: 13.11.2024 probably move this to env variables or other class, to be able to change it quicker
     private final BotConfig botConfig;
-    private final UpdateDispatcher updateDispatcher;
+    private final TelegramUpdateDispatcher telegramUpdateDispatcher;
 
     @PostConstruct
     private void initCommands() {
@@ -59,27 +60,22 @@ public class TelegramBot extends TelegramLongPollingBot { // TODO: 14.11.2024 ch
 
     @Override
     public void onUpdateReceived(Update update) {
-        updateDispatcher.distribute(update, this);
+        telegramUpdateDispatcher.distribute(update, this);
     }
 
-    private void processGroupMessage(Update update) {
+//    private void processGroupMessage(Update update) {
+//
+//        if (update.getMessage().hasText() && update.getMessage().getText() != null) {
+//            String messageText = update.getMessage().getText();
+//            if (messageText.equals("/menu")) { // todo messageText is null somehow, if we insert text with image. then this text will be called caption, not text
+//                sendMessage(update.getMessage().getChatId(), "I can't do anything here. Please, proceed to private messages or google sheets to change some information");
+//            }
+//        }
 
-        if (update.getMessage().hasText() && update.getMessage().getText() != null) {
-            String messageText = update.getMessage().getText();
-            if (messageText.equals("/menu")) { // todo messageText is null somehow, if we insert text with image. then this text will be called caption, not text
-                sendMessage(update.getMessage().getChatId(), "I can't do anything here. Please, proceed to private messages or google sheets to change some information");
-            }
-        }
-        if ((update.getMessage().hasDocument() && update.getMessage().getCaption().contains("#тест")) || // todo what if there is no caption
-                (update.getMessage().hasPhoto() && update.getMessage().getCaption().contains("#тест"))) {
-            sendMessage(update.getMessage().getChatId(), "#тест найден, обрабатываю");
-            processImageWithHashtag(update.getMessage());
-//            processTestHashtag(update.getMessage());
-
-        }
-
-    }
-
+    //
+//        }
+//
+//    }
     private void processImageWithHashtag(Message message) {
         TestResult testResult = new TestResult();
         testResult.setMessageId(message.getMessageId());
@@ -89,21 +85,6 @@ public class TelegramBot extends TelegramLongPollingBot { // TODO: 14.11.2024 ch
 
     }
 
-//    public void onUpdateReceived(Update update) {
-//        if (update.hasMessage() && update.hasMessage()) {
-//            String messageText = update.getMessage().getText();
-//            long chatId = update.getMessage().getChatId();
-//            System.out.println(update);
-//            switch (messageText) {
-//                case "/start":
-//                    startCommandReceived(chatId, update.getMessage().getFrom().getUserName());
-//                    break;
-//
-//                default:
-//                    sendMessage(chatId, "sorry, command was not recognized: " + update.getMessage().getText());
-//            }
-//        }
-//    }
 
     public void sendMessage(long chatId, String textToSend) {
         SendMessage message = new SendMessage();
@@ -117,66 +98,33 @@ public class TelegramBot extends TelegramLongPollingBot { // TODO: 14.11.2024 ch
         }
     }
 
-    public void downloadFile(Message message) {
+    public Optional<java.io.File> downloadImage(Message message) {
         if (message == null) {
-            return;
+            log.error("message is null");
+            throw new IllegalArgumentException("message must not be null");
         }
         if (message.getMediaGroupId() != null) {
             sendMessage(WORK_CHAT_ID, "я тебе несколько картинок пачкой обрабатывать не буду, давай по одной, плз");
-            return;
+            log.info("multiple images in one message, not supported yet");
         }
+
         if (message.hasDocument()) {
             Document document = message.getDocument();
             switch (document.getMimeType()) {
                 case "image/jpeg":
                 case "": // todo add more extensions
-                    saveFileLocally(message);
-                    break;
+                    return Optional.of(saveFileLocally(message));
                 default:
                     sendMessage(WORK_CHAT_ID, "ты мне скинул какую то дичь, я не могу работать с " + document.getMimeType());
             }
         }
         if (message.hasPhoto()) {
-            saveFileLocally(message);
+            return Optional.of(saveFileLocally(message));
         }
 
-
+        return Optional.empty();
     }
 
-    public void saveFileLocally(Message message) {
-        String fileId = null;
-        if (message.hasDocument()) {
-            fileId = message.getDocument().getFileId();
-        }
-        if (message.hasPhoto()) {
-            List<PhotoSize> photoSizes = message.getPhoto();
-            fileId = photoSizes.get(photoSizes.size() - 1).getFileId();
-        }
-        if (fileId == null) {
-            throw new WrongUserInputException("no file found in message"); // todo check if this is correct to throw exception here or just log it
-        }
-        try {
-            GetFile getFile = new GetFile();
-            getFile.setFileId(fileId);
-            File file = execute(getFile);  // This is the method to get the file from Telegram servers
-            downloadFile(file, "downloads/");
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-//    public void forwardMessageToPrivateChat(Message groupMessage, Long privateChatId) {
-//        ForwardMessage forwardMessage = new ForwardMessage();
-//        forwardMessage.setChatId(String.valueOf(privateChatId));
-//        forwardMessage.setFromChatId(String.valueOf(groupMessage.getChatId()));
-//        forwardMessage.setMessageId(groupMessage.getMessageId());
-//        try {
-//            execute(forwardMessage);
-//        } catch (TelegramApiException e) {
-//            log.error(e.getMessage(), e);
-//        }
-//    }
 
     public void forwardMessageFromWorkGroupToPrivateChat(Integer groupMessageIdToForward, Long privateChatId) { // TODO: 18.11.2024 what if this message was deleted or changed, Maybe better choice would be to duplicate all required data manually (forwarding is only to be able to understand context of the dialogue in group)
         ForwardMessage forwardMessage = new ForwardMessage();
@@ -190,25 +138,92 @@ public class TelegramBot extends TelegramLongPollingBot { // TODO: 14.11.2024 ch
         }
     }
 
-    private void downloadFile(File file, String destinationFolder) {
+//    private void saveFileLocally(Message message) {
+//        String fileId = null;
+//        if (message.hasDocument()) {
+//            fileId = message.getDocument().getFileId();
+//        }
+//        if (message.hasPhoto()) {
+//            List<PhotoSize> photoSizes = message.getPhoto();
+//            fileId = photoSizes.get(photoSizes.size() - 1).getFileId();
+//        }
+//        if (fileId == null) {
+//            throw new WrongUserInputException("no file found in message"); // todo check if this is correct to throw exception here or just log it
+//        }
+//        try {
+//            GetFile getFile = new GetFile();
+//            getFile.setFileId(fileId);
+//            File file = execute(getFile);  // This is the method to get the file from Telegram servers
+//            String destinationFolder = "downloads/";
+//            try {
+//                String fileUrl = "https://api.telegram.org/file/bot" + getBotToken() + "/" + file.getFilePath();
+//                InputStream in = new URL(fileUrl).openStream();
+//                java.io.File targetFile = new java.io.File(destinationFolder + file.getFilePath().substring(file.getFilePath().lastIndexOf("/") + 1));
+//                java.io.File dir = new java.io.File(destinationFolder);
+//                if (!dir.exists()) {
+//                    dir.mkdirs();
+//                }
+//
+//                Files.copy(in, targetFile.toPath());
+//                in.close();
+//
+//                log.info("File saved to: " + targetFile.getAbsolutePath() + ", file name: " + targetFile.getName());
+//            } catch (IOException e) {
+//                log.error(e.getMessage(), e);
+//            }
+//        } catch (TelegramApiException e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+    private java.io.File saveFileLocally(Message message) {
+        String fileId = null;
+        if (message.hasDocument()) {
+            fileId = message.getDocument().getFileId();
+        }
+        if (message.hasPhoto()) {
+            List<PhotoSize> photoSizes = message.getPhoto();
+            fileId = photoSizes.get(photoSizes.size() - 1).getFileId();
+        }
+        if (fileId == null) {
+            throw new WrongUserInputException("no file found in message"); // todo check if this is correct to throw exception here or just log it
+        }
+
+        // todo temporary solution, need to refactor
+        sendMessage(WORK_CHAT_ID, fileId);
+
         try {
-            String fileUrl = "https://api.telegram.org/file/bot" + getBotToken() + "/" + file.getFilePath();
-            InputStream in = new URL(fileUrl).openStream();
-            java.io.File targetFile = new java.io.File(destinationFolder + file.getFilePath().substring(file.getFilePath().lastIndexOf("/") + 1));
-            java.io.File dir = new java.io.File(destinationFolder);
-            if (!dir.exists()) {
-                dir.mkdirs();
+            GetFile getFile = new GetFile();
+            getFile.setFileId(fileId);
+            File file = execute(getFile);  // This is the method to get the file from Telegram servers
+            String destinationFolder = "downloads/";
+            try {
+                String fileUrl = "https://api.telegram.org/file/bot" + getBotToken() + "/" + file.getFilePath();
+                InputStream in = new URL(fileUrl).openStream();
+                java.io.File targetFile = new java.io.File(destinationFolder + file.getFilePath().substring(file.getFilePath().lastIndexOf("/") + 1));
+                java.io.File dir = new java.io.File(destinationFolder);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+                if(targetFile.exists()){
+                    in.close();
+                    // todo remove, this is temporary solution
+                    sendMessage(WORK_CHAT_ID, "файл уже существует, не буду его перезаписывать");
+                    return targetFile;
+                }
+                Files.copy(in, targetFile.toPath()); // todo make sure that this thing throws exception if file already exists
+                in.close();
+
+                log.info("File saved to: " + targetFile.getAbsolutePath() + ", file name: " + targetFile.getName());
+                return targetFile;
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
             }
-
-            Files.copy(in, targetFile.toPath());
-            in.close();
-
-            log.info("File saved to: " + targetFile.getAbsolutePath() + ", file name: " + targetFile.getName());
-        } catch (IOException e) {
+        } catch (TelegramApiException e) {
             log.error(e.getMessage(), e);
         }
+        return null;
     }
-
 
 }
 

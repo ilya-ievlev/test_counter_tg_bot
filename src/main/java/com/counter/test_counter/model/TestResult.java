@@ -58,4 +58,10 @@ public class TestResult {
 
     @Column(name = "file_id")
     private Long fileId; // todo check what happens if message was deleted or edited
+
+    @Column(name = "ocr_result")
+    private String ocrResult;
+
+    @Column(name = "chat_id")
+    private String chatId;
 }

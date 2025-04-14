@@ -1,6 +1,7 @@
 package com.counter.test_counter.service;
 
 import com.counter.test_counter.model.Test;
+import com.counter.test_counter.model.TestResult;
 import com.counter.test_counter.repository.TestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,5 +39,15 @@ public class TestService {
     public Optional<Test> findById(long id) { // TODO: 13.11.2024 or should I return dto here
         return testRepository.findById(id);
     }
+
+
+    public void saveTestResult(TestResult testResult) {
+
+    }
+
+    public void sighTestToTestResult(Test test) {
+        // todo ask user if this is the test that he really want to asign or he wants to do something different or add this image as a result to other test
+    }
+
 
 }

@@ -4,7 +4,8 @@ create table if not exists users
     username     varchar(32) not null,
     first_name   varchar(64) not null,
     last_name    varchar(64) not null,
-    is_bot_admin boolean     not null
+    is_bot_admin boolean     not null,
+    local_name   varchar(64)
 );
 
 create table if not exists tests
@@ -24,6 +25,8 @@ create table if not exists test_results
     message_text        varchar(500) not null,
     image_url           varchar(500),
     file_id             bigint,
+    ocr_result          varchar(5000),
+    chat_id             varchar(50),
     foreign key (test_id) references tests (id),
     foreign key (user_executor_id) references users (id),
     foreign key (user_uploaded_by_id) references users (id)
@@ -38,13 +41,23 @@ create table if not exists weekly_reports
 
 create table if not exists weekly_report_results
 (
-    id                  bigint       not null primary key auto_increment unique,
-    weekly_report_id    bigint       not null,
-    user_executor_id    bigint       not null,
-    user_uploaded_by_id bigint       not null,
+    id                  bigint not null primary key auto_increment unique,
+    weekly_report_id    bigint not null,
+    user_executor_id    bigint not null,
+    user_uploaded_by_id bigint not null,
     image_url           varchar(500),
     file_id             bigint,
+    ocr_result          varchar(5000),
+    chat_id             varchar(50),
     foreign key (weekly_report_id) references weekly_reports (id),
     foreign key (user_executor_id) references users (id),
     foreign key (user_uploaded_by_id) references users (id)
+);
+
+create table if not exists name_substitute
+(
+    id      bigint       not null primary key auto_increment unique,
+    name    varchar(150) not null,
+    user_id bigint       not null,
+    foreign key (user_id) references users (id)
 )

@@ -42,11 +42,8 @@ public class User {
     @Column(name = "local_name")
     private String localName;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany
     private List<NameSubstitute> nameSubstitutes;
-
-
-
 
     @Column(name = "username")
     @NotBlank

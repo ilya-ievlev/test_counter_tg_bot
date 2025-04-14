@@ -12,7 +12,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
-@Entity(name = "users")
+@Entity(name = "name_substitute")
 @Getter
 @Setter
 @AllArgsConstructor
