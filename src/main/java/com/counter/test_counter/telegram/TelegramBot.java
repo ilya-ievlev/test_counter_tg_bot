@@ -1,6 +1,6 @@
 package com.counter.test_counter.telegram;
 
-import com.counter.test_counter.dispatcher.TelegramUpdateDispatcher;
+import com.counter.test_counter.update_dispatcher.TelegramUpdateDispatcher;
 import com.counter.test_counter.exception.WrongUserInputException;
 import com.counter.test_counter.model.TestResult;
 import com.counter.test_counter.telegram.config.BotConfig;

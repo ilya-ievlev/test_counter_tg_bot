@@ -1,4 +1,4 @@
-package com.counter.test_counter.dispatcher;
+package com.counter.test_counter.update_dispatcher;
 
 import com.counter.test_counter.service.handler.group_chat_handler.GroupCallbackQueryHandler;
 import com.counter.test_counter.service.handler.group_chat_handler.GroupCommandHandler;
@@ -36,20 +36,20 @@ public class TelegramUpdateDispatcher {
             }
         }
         if (update.hasMessage() || update.getMessage().getChatId() == WORK_CHAT_ID) {
-            if (update.getMessage().getText() != null && update.getMessage().getText().charAt(0) == '/') { // todo check if this thing can throw nullpointer here
+            if (update.getMessage().getText() != null && update.getMessage().isCommand()) { // todo check if this thing can throw nullpointer here
                 groupCommandHandler.handle(update, telegramBot);
             } else {
                 groupMessageHandler.handle(update, telegramBot);
             }
         } else if (update.hasMessage() || update.getMessage().getChatId() > 0) {
-            if (update.getMessage().getText() != null && update.getMessage().getText().charAt(0) == '/') { // todo check if this thing can throw nullpointer here
+            if (update.getMessage().getText() != null && update.getMessage().isCommand()) { // todo check if this thing can throw nullpointer here
                 privateCommandHandler.handle(update, telegramBot);
             } else {
                 privateMessageHandler.handle(update, telegramBot);
             }
         } else {
             telegramBot.sendMessage(update.getMessage().getChatId(), "я не могу обработать сообщения такого типа, пожалуйста, обратитесь к администратору");
-            log.info("unknown update type: {}", update);
+            log.warn("unknown update type: {}", update);
         }
     }
 }

@@ -5,6 +5,7 @@ import com.counter.test_counter.model.TestResult;
 import com.counter.test_counter.model.User;
 import com.counter.test_counter.service.handler.Handler;
 import com.counter.test_counter.telegram.TelegramBot;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.MessageEntity;
@@ -15,13 +16,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class GroupMessageHandler implements Handler {
 
     private final OcrClient ocrClient;
-
-    public GroupMessageHandler(OcrClient ocrClient) {
-        this.ocrClient = ocrClient;
-    }
 
     // todo add a button under sent message that clarifies what user wants to do and delete previous message if needed
 
